@@ -1,0 +1,155 @@
+/* iOS 17 Global Styles */
+:root {
+  --ios-bg: #F2F2F7;
+  --ios-card-bg: #FFFFFF;
+  --ios-blue: #007AFF;
+  --ios-green: #34C759;
+  --ios-red: #FF3B30;
+  --ios-gray: #8E8E93;
+  --ios-light-gray: #E5E5EA;
+  --ios-text: #000000;
+  --ios-text-muted: #3C3C4399;
+}
+
+body {
+  background-color: var(--ios-bg);
+  color: var(--ios-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Navbar (Glassmorphism) */
+.navbar {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.15);
+}
+.navbar-brand {
+  color: var(--ios-text) !important;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.nav-link {
+  color: var(--ios-blue) !important;
+  font-weight: 500;
+}
+
+/* Buttons */
+.btn {
+  border-radius: 12px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border: none;
+  transition: opacity 0.2s;
+}
+.btn:active {
+  opacity: 0.7;
+}
+.btn-primary {
+  background-color: var(--ios-blue);
+  color: white;
+}
+.btn-primary:hover {
+  background-color: #006ce4;
+}
+.btn-outline-secondary {
+  background-color: var(--ios-light-gray);
+  color: var(--ios-text);
+}
+.btn-outline-secondary:hover {
+  background-color: #d1d1d6;
+  color: var(--ios-text);
+}
+.btn-danger {
+  background-color: var(--ios-red);
+}
+.btn-success {
+  background-color: var(--ios-green);
+}
+
+/* Cards (iOS Grouped Style) */
+.card {
+  background-color: var(--ios-card-bg);
+  border-radius: 14px;
+  border: none !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.03);
+  overflow: hidden;
+}
+
+/* Form Inputs */
+.form-control, .form-select {
+  background-color: var(--ios-light-gray) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 12px 16px;
+  font-size: 16px;
+  color: var(--ios-text);
+}
+.form-control:focus, .form-select:focus {
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3) !important;
+}
+.form-label {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--ios-text-muted);
+  margin-bottom: 4px;
+  margin-left: 4px;
+}
+
+/* Tables */
+.table {
+  background-color: transparent;
+  margin-bottom: 0;
+}
+.table thead th {
+  border-bottom: 0.5px solid rgba(0,0,0,0.1);
+  background-color: #F9F9F9;
+  color: var(--ios-text-muted);
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 12px 16px;
+}
+.table tbody td {
+  border-bottom: 0.5px solid rgba(0,0,0,0.05);
+  padding: 16px;
+  vertical-align: middle;
+}
+
+/* Sidebar for Admin */
+.sidebar {
+  background-color: transparent !important;
+  border-right: none !important;
+}
+.sidebar .btn {
+  border-radius: 10px;
+  font-weight: 500;
+  padding: 10px 16px;
+  margin-bottom: 4px;
+  color: var(--ios-text);
+  background-color: transparent;
+}
+.sidebar .btn-primary {
+  background-color: #E5F1FF !important;
+  color: var(--ios-blue) !important;
+}
+.sidebar .btn:hover:not(.btn-primary) {
+  background-color: rgba(0,0,0,0.05);
+}
+
+/* Badges */
+.badge {
+  border-radius: 100px;
+  padding: 6px 10px;
+  font-weight: 600;
+  font-size: 12px;
+}
