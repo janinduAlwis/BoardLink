@@ -84,4 +84,54 @@ const updatePaymentStatus = async (req, res) => {
   }
 };
 
-module.exports = { getAllPayments, createInvoice, updatePaymentStatus };
+// Get all payments for the logged in tenant
+const getMyPayments = async (req, res) => {
+  const user_id = req.user.user_id;
+  try {
+    const query = `
+      SELECT rp.payment_id, rp.billing_month, rp.rent_amount, rp.due_date, 
+             rp.payment_date, rp.payment_status
+      FROM rent_payments rp
+      JOIN tenants t ON rp.tenant_id = t.tenant_id
+      WHERE t.user_id = ?
+      ORDER BY rp.due_date DESC
+    `;
+    const [rows] = await db.query(query, [user_id]);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching my payments:', error);
+    res.status(500).json({ message: 'Server error.', error: error.message });
+  }
+};
+
+// Simulate paying rent (dummy pay now button)
+const payMyRent = async (req, res) => {
+  const user_id = req.user.user_id;
+  const { payment_id } = req.params;
+  
+  try {
+    // Verify payment belongs to tenant
+    const [paymentRows] = await db.query(
+      `SELECT rp.payment_id FROM rent_payments rp
+       JOIN tenants t ON rp.tenant_id = t.tenant_id
+       WHERE rp.payment_id = ? AND t.user_id = ?`,
+       [payment_id, user_id]
+    );
+
+    if (paymentRows.length === 0) {
+      return res.status(404).json({ message: 'Payment record not found or unauthorized.' });
+    }
+
+    await db.query(
+      'UPDATE rent_payments SET payment_status = ?, payment_date = CURRENT_DATE WHERE payment_id = ?',
+      ['paid', payment_id]
+    );
+
+    res.status(200).json({ message: 'Rent paid successfully.' });
+  } catch (error) {
+    console.error('Error paying rent:', error);
+    res.status(500).json({ message: 'Server error.', error: error.message });
+  }
+};
+
+module.exports = { getAllPayments, createInvoice, updatePaymentStatus, getMyPayments, payMyRent };

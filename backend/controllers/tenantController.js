@@ -156,4 +156,23 @@ const deallocateRoom = async (req, res) => {
   }
 };
 
-module.exports = { getAllTenants, allocateRoom, deallocateRoom };
+// Get current allocation for the logged in tenant
+const getMyAllocation = async (req, res) => {
+  const user_id = req.user.user_id;
+  try {
+    const query = `
+      SELECT r.room_number, r.monthly_rent, ra.allocated_date, ra.allocation_status 
+      FROM room_allocations ra
+      JOIN tenants t ON ra.tenant_id = t.tenant_id
+      JOIN rooms r ON ra.room_id = r.room_id
+      WHERE t.user_id = ? AND ra.allocation_status = 'active'
+    `;
+    const [rows] = await db.query(query, [user_id]);
+    res.status(200).json(rows.length > 0 ? rows[0] : null);
+  } catch (error) {
+    console.error('Error fetching my allocation:', error);
+    res.status(500).json({ message: 'Server error.', error: error.message });
+  }
+};
+
+module.exports = { getAllTenants, allocateRoom, deallocateRoom, getMyAllocation };
