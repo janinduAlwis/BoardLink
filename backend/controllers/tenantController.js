@@ -161,7 +161,7 @@ const getMyAllocation = async (req, res) => {
   const user_id = req.user.user_id;
   try {
     const query = `
-      SELECT r.room_number, r.monthly_rent, ra.allocated_date, ra.allocation_status 
+      SELECT r.room_number, r.room_type, r.monthly_rent, ra.allocated_date, ra.allocation_status 
       FROM room_allocations ra
       JOIN tenants t ON ra.tenant_id = t.tenant_id
       JOIN rooms r ON ra.room_id = r.room_id

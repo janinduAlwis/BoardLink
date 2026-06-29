@@ -15,6 +15,8 @@ const Register = () => {
   });
   
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   
   const navigate = useNavigate();
 
@@ -58,6 +60,9 @@ const Register = () => {
       <div className="card" style={{ width: '100%', maxWidth: '500px' }}>
         <div className="card-body p-5">
           <h2 className="text-center mb-4 fw-bold" style={{ color: 'var(--ios-blue)' }}>Create Account</h2>
+          
+          {error && <div className="alert alert-danger">{error}</div>}
+          {success && <div className="alert alert-success">{success}</div>}
           
           <form onSubmit={handleSubmit}>
             <div className="mb-3">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import Swal from 'sweetalert2';
 import { toast } from 'react-toastify';
 
 const StaffDashboard = () => {
@@ -34,10 +35,20 @@ const StaffDashboard = () => {
     fetchData();
   }, []);
 
-  const handleUpdateTaskStatus = async (taskId, action) => {
-    if (!window.confirm(`Are you sure you want to mark this task as ${action}?`)) return;
+  const handleUpdateTaskStatus = async (requestId, action) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `Are you sure you want to mark this task as ${action}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: `Yes, mark as ${action}!`
+    });
+    if (!result.isConfirmed) return;
+
     try {
-      await axios.put(`http://localhost:5000/api/staff/my-tasks/${taskId}/status`, { action });
+      await axios.put(`http://localhost:5000/api/staff/my-tasks/${requestId}/status`, { action });
       toast.success(`Task status updated to ${action}`);
       fetchData();
     } catch (error) {

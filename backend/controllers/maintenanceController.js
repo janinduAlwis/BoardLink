@@ -59,8 +59,8 @@ const assignStaff = async (req, res) => {
     }
 
     // Verify staff user exists and has Staff role
-    const [staffRows] = await db.query('SELECT role FROM users WHERE user_id = ?', [staff_id]);
-    if (staffRows.length === 0 || staffRows[0].role !== 'Staff') {
+    const [staffRows] = await db.query('SELECT r.role_name FROM users u JOIN roles r ON u.role_id = r.role_id WHERE u.user_id = ?', [staff_id]);
+    if (staffRows.length === 0 || staffRows[0].role_name !== 'Staff') {
       return res.status(400).json({ message: 'Invalid Staff ID.' });
     }
 
@@ -79,11 +79,30 @@ const assignStaff = async (req, res) => {
 // Admin: Fetch all staff for assignment drop-downs
 const getAllStaff = async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT user_id, full_name, email FROM users WHERE role = "Staff"');
+    const [rows] = await db.query('SELECT u.user_id, u.full_name, u.email FROM users u JOIN roles r ON u.role_id = r.role_id WHERE r.role_name = "Staff"');
     res.status(200).json(rows);
   } catch (error) {
     res.status(500).json({ message: 'Server error.', error: error.message });
   }
 };
 
-module.exports = { submitMaintenanceRequest, getAllMaintenanceRequests, assignStaff, getAllStaff };
+// Admin: Update maintenance status
+const updateMaintenanceStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    if (!status) return res.status(400).json({ message: 'Status is required.' });
+    
+    await db.query(
+      'UPDATE maintenance_requests SET status = ? WHERE request_id = ?',
+      [status, id]
+    );
+    res.status(200).json({ message: 'Status updated successfully.' });
+  } catch (error) {
+    console.error('Error updating status:', error);
+    res.status(500).json({ message: 'Server error.', error: error.message });
+  }
+};
+
+module.exports = { submitMaintenanceRequest, getAllMaintenanceRequests, assignStaff, getAllStaff, updateMaintenanceStatus };

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { toast } from 'react-toastify';
+import Swal from 'sweetalert2';
 
 const TenantDashboard = () => {
   const { user } = useContext(AuthContext);
@@ -26,7 +27,7 @@ const TenantDashboard = () => {
         axios.get('http://localhost:5000/api/announcements').catch(() => ({ data: [] }))
       ]);
 
-      setAllocation(allocRes.data.length > 0 ? allocRes.data[0] : null);
+      setAllocation(allocRes.data?.room_number ? allocRes.data : null);
       setPayments(payRes.data);
       setUtilities(utilRes.data);
       setAnnouncements(annRes.data);
@@ -43,7 +44,16 @@ const TenantDashboard = () => {
   }, []);
 
   const handlePayRent = async (paymentId) => {
-    if (!window.confirm('Simulate paying this rent invoice?')) return;
+    const result = await Swal.fire({
+      title: 'Pay Rent',
+      text: 'Simulate paying this rent invoice?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#28a745',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, Pay'
+    });
+    if (!result.isConfirmed) return;
     try {
       await axios.put(`http://localhost:5000/api/payments/my-payments/${paymentId}/pay`);
       toast.success('Rent payment successful!');
@@ -55,7 +65,16 @@ const TenantDashboard = () => {
   };
 
   const handlePayUtility = async (billId) => {
-    if (!window.confirm('Simulate paying this utility bill?')) return;
+    const result = await Swal.fire({
+      title: 'Pay Utility Bill',
+      text: 'Simulate paying this utility bill?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#28a745',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, Pay'
+    });
+    if (!result.isConfirmed) return;
     try {
       await axios.put(`http://localhost:5000/api/utilities/my-bills/${billId}/pay`);
       toast.success('Utility bill payment successful!');
@@ -99,8 +118,8 @@ const TenantDashboard = () => {
   }
 
   const totalOutstanding = 
-    payments.filter(p => p.payment_status === 'unpaid').reduce((sum, p) => sum + Number(p.amount), 0) +
-    utilities.filter(u => u.status === 'unpaid').reduce((sum, u) => sum + Number(u.amount), 0);
+    payments.filter(p => p.payment_status !== 'paid').reduce((sum, p) => sum + Number(p.rent_amount || 0), 0) +
+    utilities.filter(u => u.status !== 'paid').reduce((sum, u) => sum + Number(u.total_amount || 0), 0);
 
   return (
     <div className="container py-4">
@@ -151,11 +170,11 @@ const TenantDashboard = () => {
                   </li>
                   <li className="list-group-item d-flex justify-content-between align-items-center px-0">
                     <span className="text-muted">Room Type</span>
-                    <span className="fw-semibold">{allocation.room_type}</span>
+                    <span className="fw-semibold">{allocation.room_type || 'N/A'}</span>
                   </li>
                   <li className="list-group-item d-flex justify-content-between align-items-center px-0">
                     <span className="text-muted">Move-in Date</span>
-                    <span className="fw-semibold">{new Date(allocation.start_date).toLocaleDateString()}</span>
+                    <span className="fw-semibold">{new Date(allocation.allocated_date).toLocaleDateString()}</span>
                   </li>
                 </ul>
               ) : (
@@ -227,15 +246,15 @@ const TenantDashboard = () => {
                     <tr><td colSpan="4" className="text-center py-3 text-muted">No rent invoices found.</td></tr>
                   ) : payments.map(p => (
                     <tr key={p.payment_id}>
-                      <td>{p.month} / {p.year}</td>
-                      <td>Rs. {Number(p.amount).toFixed(2)}</td>
+                      <td>{p.billing_month}</td>
+                      <td>Rs. {Number(p.rent_amount || 0).toFixed(2)}</td>
                       <td>
                         <span className={`badge bg-${p.payment_status === 'paid' ? 'success' : 'danger'}`}>
-                          {p.payment_status.toUpperCase()}
+                          {p.payment_status?.toUpperCase()}
                         </span>
                       </td>
                       <td>
-                        {p.payment_status === 'unpaid' && (
+                        {p.payment_status !== 'paid' && (
                           <button className="btn btn-sm btn-outline-primary" onClick={() => handlePayRent(p.payment_id)}>Pay Now</button>
                         )}
                       </td>
@@ -263,18 +282,18 @@ const TenantDashboard = () => {
                   {utilities.length === 0 ? (
                     <tr><td colSpan="5" className="text-center py-3 text-muted">No utility bills found.</td></tr>
                   ) : utilities.map(u => (
-                    <tr key={u.bill_id}>
-                      <td><span className="fw-semibold text-capitalize">{u.utility_type}</span></td>
-                      <td>{u.billing_month} / {u.billing_year}</td>
-                      <td>Rs. {Number(u.amount).toFixed(2)}</td>
+                    <tr key={u.utility_bill_id}>
+                      <td><span className="fw-semibold text-capitalize">Consolidated Bill</span></td>
+                      <td>{u.billing_month}</td>
+                      <td>Rs. {Number(u.total_amount || 0).toFixed(2)}</td>
                       <td>
-                        <span className={`badge bg-${u.status === 'paid' ? 'success' : 'danger'}`}>
-                          {u.status.toUpperCase()}
+                        <span className={`badge bg-${u.status === 'paid' ? 'success' : 'warning'}`}>
+                          {u.status?.toUpperCase()}
                         </span>
                       </td>
                       <td>
-                        {u.status === 'unpaid' && (
-                          <button className="btn btn-sm btn-outline-primary" onClick={() => handlePayUtility(u.bill_id)}>Pay Now</button>
+                        {u.status !== 'paid' && (
+                          <button className="btn btn-sm btn-outline-primary" onClick={() => handlePayUtility(u.utility_bill_id)}>Pay Now</button>
                         )}
                       </td>
                     </tr>

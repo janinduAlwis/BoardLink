@@ -4,7 +4,7 @@ const db = require('../config/db');
 const getAnnouncements = async (req, res) => {
   try {
     const query = `
-      SELECT a.announcement_id, a.title, a.content, a.created_at, u.full_name AS author_name
+      SELECT a.announcement_id, a.title, a.message, a.created_at, u.full_name AS author_name
       FROM announcements a
       JOIN users u ON a.created_by = u.user_id
       ORDER BY a.created_at DESC
@@ -20,16 +20,16 @@ const getAnnouncements = async (req, res) => {
 // Admin: Create an announcement
 const createAnnouncement = async (req, res) => {
   const admin_id = req.user.user_id;
-  const { title, content } = req.body;
+  const { title, message } = req.body;
 
-  if (!title || !content) {
+  if (!title || !message) {
     return res.status(400).json({ message: 'Title and content are required.' });
   }
 
   try {
     await db.query(
-      'INSERT INTO announcements (title, content, created_by) VALUES (?, ?, ?)',
-      [title, content, admin_id]
+      'INSERT INTO announcements (title, message, created_by) VALUES (?, ?, ?)',
+      [title, message, admin_id]
     );
     res.status(201).json({ message: 'Announcement created successfully.' });
   } catch (error) {

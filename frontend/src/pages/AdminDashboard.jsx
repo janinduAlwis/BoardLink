@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { toast } from 'react-toastify';
+import Swal from 'sweetalert2';
 
 const AdminDashboard = () => {
   const { user } = useContext(AuthContext);
@@ -55,6 +57,18 @@ const AdminDashboard = () => {
     due_date: ''
   });
 
+  // New States
+  const [maintenanceRequests, setMaintenanceRequests] = useState([]);
+  const [staffMembers, setStaffMembers] = useState([]);
+  const [visitors, setVisitors] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [announcementFormData, setAnnouncementFormData] = useState({
+    title: '',
+    message: ''
+  });
+
   // Fetch Rooms, Tenants, and Payments
   const fetchRooms = async () => {
     try {
@@ -92,11 +106,51 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchMaintenance = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/maintenance');
+      setMaintenanceRequests(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchVisitors = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/visitors');
+      setVisitors(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchAnnouncements = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/announcements');
+      setAnnouncements(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchStaff = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/maintenance/staff');
+      setStaffMembers(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchRooms();
     fetchTenants();
     fetchPayments();
     fetchUtilities();
+    fetchMaintenance();
+    fetchVisitors();
+    fetchAnnouncements();
+    fetchStaff();
   }, []);
 
   // Handle Room Form Inputs
@@ -154,9 +208,18 @@ const AdminDashboard = () => {
     setShowRoomForm(true);
   };
 
-  // Delete Room
+  // Handle Room Deletion
   const handleDeleteRoom = async (roomId) => {
-    if (!window.confirm('Are you sure you want to delete this room?')) return;
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'Are you sure you want to delete this room?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    });
+    if (!result.isConfirmed) return;
     setRoomError('');
     setRoomSuccess('');
 
@@ -200,7 +263,16 @@ const AdminDashboard = () => {
 
   // Handle Room Deallocation
   const handleDeallocate = async (allocationId) => {
-    if (!window.confirm('Are you sure you want to remove this tenant from the room?')) return;
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'Are you sure you want to remove this tenant from the room?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, remove them!'
+    });
+    if (!result.isConfirmed) return;
     setTenantError('');
     setTenantSuccess('');
 
@@ -280,6 +352,73 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error(err);
       setUtilityError(err.response?.data?.message || 'Failed to update utility status.');
+    }
+  };
+
+  // Maintenance Handlers
+  const handleUpdateMaintenanceStatus = async (requestId, newStatus) => {
+    try {
+      await axios.put(`http://localhost:5000/api/maintenance/${requestId}/status`, { status: newStatus });
+      toast.success('Maintenance status updated');
+      fetchMaintenance();
+    } catch (error) {
+      toast.error('Failed to update status');
+    }
+  };
+
+  const handleAssignStaff = async (requestId, staffId) => {
+    if (!staffId) return; 
+    try {
+      await axios.put(`http://localhost:5000/api/maintenance/${requestId}/assign`, { staff_id: staffId });
+      toast.success('Staff assigned successfully');
+      fetchMaintenance();
+    } catch (error) {
+      toast.error('Failed to assign staff');
+    }
+  };
+
+  // Visitor Handlers
+  const handleUpdateVisitorStatus = async (visitorId, newStatus) => {
+    try {
+      await axios.put(`http://localhost:5000/api/visitors/${visitorId}/status`, { status: newStatus });
+      toast.success(`Visitor ${newStatus.toLowerCase()}`);
+      fetchVisitors();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update visitor status');
+    }
+  };
+
+  // Announcement Handlers
+  const handlePostAnnouncement = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post('http://localhost:5000/api/announcements', announcementFormData);
+      toast.success('Announcement posted successfully');
+      setShowAnnouncementModal(false);
+      setAnnouncementFormData({ title: '', message: '' });
+      fetchAnnouncements();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to post announcement');
+    }
+  };
+
+  const handleDeleteAnnouncement = async (id) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'Delete this announcement?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    });
+    if (!result.isConfirmed) return;
+    try {
+      await axios.delete(`http://localhost:5000/api/announcements/${id}`);
+      toast.success('Announcement deleted');
+      fetchAnnouncements();
+    } catch (err) {
+      toast.error('Failed to delete announcement');
     }
   };
 
@@ -475,6 +614,7 @@ const AdminDashboard = () => {
                           onChange={handleRoomChange}
                           required
                           placeholder="15000"
+                          step="1000"
                         />
                       </div>
                       <div className="col-md-2">
@@ -1017,11 +1157,193 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {/* PLACEHOLDERS FOR OTHER TABS */}
-          {['maintenance', 'visitors', 'announcements'].includes(activeTab) && (
-            <div className="card p-5 border-0">
-              <h3 className="text-capitalize text-muted fw-bold">{activeTab} Management</h3>
-              <p className="text-muted">This module is under development and will be implemented in the next steps.</p>
+          {/* TAB 6: MAINTENANCE */}
+          {activeTab === 'maintenance' && (
+            <div>
+              <h3 className="h4 text-secondary mb-3">Maintenance Requests</h3>
+              <div className="card border-0 shadow-sm">
+                <div className="table-responsive">
+                  <table className="table align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>Tenant</th>
+                        <th>Room</th>
+                        <th>Issue</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Assignee</th>
+                        <th className="text-end">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {maintenanceRequests.length === 0 ? (
+                        <tr><td colSpan="7" className="text-center py-4 text-muted">No maintenance requests found.</td></tr>
+                      ) : (
+                        maintenanceRequests.map(req => (
+                          <tr key={req.request_id}>
+                            <td>{req.tenant_name}</td>
+                            <td>{req.room_number || 'N/A'}</td>
+                            <td>
+                              <div className="fw-bold">{req.title}</div>
+                              <div className="small text-muted">{req.description}</div>
+                            </td>
+                            <td>
+                              <span className={`badge ${req.priority === 'high' ? 'bg-danger' : req.priority === 'medium' ? 'bg-warning text-dark' : 'bg-info'}`}>
+                                {req.priority.toUpperCase()}
+                              </span>
+                            </td>
+                            <td>
+                              <span className={`badge ${req.status === 'Completed' ? 'bg-success' : req.status === 'In Progress' ? 'bg-primary' : 'bg-secondary'}`}>
+                                {req.status}
+                              </span>
+                            </td>
+                            <td>
+                              <select 
+                                className="form-select form-select-sm d-inline-block w-auto"
+                                value={req.assigned_staff_id || ''}
+                                onChange={(e) => handleAssignStaff(req.request_id, e.target.value)}
+                              >
+                                <option value="">Unassigned</option>
+                                {staffMembers.map(staff => (
+                                  <option key={staff.user_id} value={staff.user_id}>{staff.full_name}</option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="text-end">
+                              <select 
+                                className="form-select form-select-sm d-inline-block w-auto"
+                                value={req.status}
+                                onChange={(e) => handleUpdateMaintenanceStatus(req.request_id, e.target.value)}
+                              >
+                                <option value="Submitted">Submitted</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Completed">Completed</option>
+                              </select>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 7: VISITORS */}
+          {activeTab === 'visitors' && (
+            <div>
+              <h3 className="h4 text-secondary mb-3">Visitor Logs</h3>
+              <div className="card border-0 shadow-sm">
+                <div className="table-responsive">
+                  <table className="table align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>Tenant</th>
+                        <th>Visitor Name</th>
+                        <th>Visit Date</th>
+                        <th>Purpose</th>
+                        <th>Status</th>
+                        <th className="text-end">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visitors.length === 0 ? (
+                        <tr><td colSpan="6" className="text-center py-4 text-muted">No visitors registered.</td></tr>
+                      ) : (
+                        visitors.map(visitor => (
+                          <tr key={visitor.visitor_id}>
+                            <td>{visitor.tenant_name}</td>
+                            <td><div className="fw-bold">{visitor.visitor_name}</div></td>
+                            <td>{new Date(visitor.visit_date).toLocaleDateString()}</td>
+                            <td>{visitor.purpose || 'N/A'}</td>
+                            <td>
+                              <span className={`badge ${visitor.approval_status.toLowerCase() === 'approved' ? 'bg-success' : visitor.approval_status.toLowerCase() === 'rejected' ? 'bg-danger' : 'bg-warning text-dark'}`}>
+                                {visitor.approval_status.toUpperCase()}
+                              </span>
+                            </td>
+                            <td className="text-end gap-2 d-flex justify-content-end">
+                              {visitor.approval_status.toLowerCase() === 'pending' && (
+                                <>
+                                  <button className="btn btn-sm btn-success rounded-pill px-3" onClick={() => handleUpdateVisitorStatus(visitor.visitor_id, 'Approved')}>Approve</button>
+                                  <button className="btn btn-sm btn-danger rounded-pill px-3" onClick={() => handleUpdateVisitorStatus(visitor.visitor_id, 'Rejected')}>Reject</button>
+                                </>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 8: ANNOUNCEMENTS */}
+          {activeTab === 'announcements' && (
+            <div>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h3 className="h4 text-secondary mb-0">Announcements</h3>
+                <button
+                  className="btn btn-sm btn-primary rounded-pill px-4"
+                  onClick={() => setShowAnnouncementModal(!showAnnouncementModal)}
+                >
+                  {showAnnouncementModal ? 'Cancel' : 'Post Announcement'}
+                </button>
+              </div>
+
+              {showAnnouncementModal && (
+                <div className="card p-4 mb-4 border-0 shadow-sm">
+                  <h4 className="h5 fw-bold mb-3" style={{ color: 'var(--ios-blue)' }}>New Announcement</h4>
+                  <form onSubmit={handlePostAnnouncement}>
+                    <div className="mb-3">
+                      <label className="form-label small">Title</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        required
+                        value={announcementFormData.title}
+                        onChange={(e) => setAnnouncementFormData({...announcementFormData, title: e.target.value})}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label small">Message</label>
+                      <textarea 
+                        className="form-control" 
+                        rows="3" 
+                        required
+                        value={announcementFormData.message}
+                        onChange={(e) => setAnnouncementFormData({...announcementFormData, message: e.target.value})}
+                      ></textarea>
+                    </div>
+                    <button type="submit" className="btn btn-primary rounded-pill px-4">Post</button>
+                  </form>
+                </div>
+              )}
+
+              <div className="row g-3">
+                {announcements.length === 0 ? (
+                  <div className="col-12 text-center py-4 text-muted">No announcements posted.</div>
+                ) : (
+                  announcements.map(ann => (
+                    <div className="col-md-6" key={ann.announcement_id}>
+                      <div className="card border-0 shadow-sm h-100">
+                        <div className="card-body">
+                          <div className="d-flex justify-content-between">
+                            <h5 className="card-title fw-bold">{ann.title}</h5>
+                            <button className="btn btn-sm btn-outline-danger border-0" onClick={() => handleDeleteAnnouncement(ann.announcement_id)}>
+                              <i className="bi bi-trash"></i> Delete
+                            </button>
+                          </div>
+                          <h6 className="card-subtitle mb-2 text-muted small">Posted by {ann.author_name} on {new Date(ann.created_at).toLocaleDateString()}</h6>
+                          <p className="card-text">{ann.message}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           )}
         </main>
