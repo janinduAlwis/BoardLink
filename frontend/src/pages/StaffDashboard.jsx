@@ -1,26 +1,30 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
 const StaffDashboard = () => {
   const { user } = useContext(AuthContext);
 
   const [tasks, setTasks] = useState([]);
   const [visitors, setVisitors] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [tasksRes, visitorsRes] = await Promise.all([
+      const [tasksRes, visitorsRes, annRes] = await Promise.all([
         axios.get('http://localhost:5000/api/staff/my-tasks'),
-        axios.get('http://localhost:5000/api/staff/visitors/today')
+        axios.get('http://localhost:5000/api/staff/visitors/today'),
+        axios.get('http://localhost:5000/api/announcements')
       ]);
       setTasks(tasksRes.data);
       setVisitors(visitorsRes.data);
+      setAnnouncements(annRes.data);
     } catch (error) {
       console.error('Error fetching staff data:', error);
-      alert('Failed to load dashboard data. Check connection.');
+      toast.error('Failed to load dashboard data. Check connection.');
     } finally {
       setLoading(false);
     }
@@ -34,10 +38,11 @@ const StaffDashboard = () => {
     if (!window.confirm(`Are you sure you want to mark this task as ${action}?`)) return;
     try {
       await axios.put(`http://localhost:5000/api/staff/my-tasks/${taskId}/status`, { action });
+      toast.success(`Task status updated to ${action}`);
       fetchData();
     } catch (error) {
       console.error('Error updating task:', error);
-      alert('Failed to update task status.');
+      toast.error('Failed to update task status.');
     }
   };
 
@@ -62,6 +67,22 @@ const StaffDashboard = () => {
       </div>
 
       <div className="row g-4">
+        <div className="col-lg-12">
+          {announcements.length > 0 && (
+            <div className="alert alert-warning mb-4 shadow-sm border-warning">
+              <h5 className="alert-heading"><i className="bi bi-megaphone-fill me-2"></i>Announcements</h5>
+              <hr />
+              {announcements.map(ann => (
+                <div key={ann.announcement_id} className="mb-2">
+                  <strong>{ann.title}</strong>
+                  <p className="mb-0 small">{ann.content}</p>
+                  <small className="text-muted">By {ann.author_name}</small>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="col-lg-12">
           <h4 className="mb-3 text-secondary">Assigned Maintenance Tasks</h4>
           <div className="card border shadow-sm mb-4">

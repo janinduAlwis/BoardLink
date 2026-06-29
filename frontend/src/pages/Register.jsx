@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -13,8 +14,6 @@ const Register = () => {
     emergency_contact: ''
   });
   
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
@@ -28,7 +27,6 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setSuccess('');
     setLoading(true);
 
@@ -60,9 +58,6 @@ const Register = () => {
       <div className="card" style={{ width: '100%', maxWidth: '500px' }}>
         <div className="card-body p-5">
           <h2 className="text-center mb-4 fw-bold" style={{ color: 'var(--ios-blue)' }}>Create Account</h2>
-          
-          {error && <div className="alert alert-danger p-2 small">{error}</div>}
-          {success && <div className="alert alert-success p-2 small">{success}</div>}
           
           <form onSubmit={handleSubmit}>
             <div className="mb-3">

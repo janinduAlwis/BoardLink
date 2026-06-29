@@ -9,6 +9,11 @@ import AdminDashboard from './pages/AdminDashboard';
 import TenantDashboard from './pages/TenantDashboard';
 import StaffDashboard from './pages/StaffDashboard';
 
+// Toastify setup
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+
 // Protected Route wrapper helper
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useContext(AuthContext);
@@ -40,6 +45,7 @@ function App() {
       <Router>
         <div className="d-flex flex-column min-vh-100">
           <Navbar />
+          <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
           <main className="flex-grow-1">
             <Routes>
               {/* Public Routes */}
