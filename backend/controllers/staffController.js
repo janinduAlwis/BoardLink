@@ -12,7 +12,7 @@ const getMyMaintenanceTasks = async (req, res) => {
       JOIN rooms r ON mr.room_id = r.room_id
       JOIN tenants t ON mr.tenant_id = t.tenant_id
       JOIN users u ON t.user_id = u.user_id
-      WHERE mr.assigned_staff_id = ?
+      WHERE mr.assigned_staff_id = ? AND mr.status != 'Completed'
       ORDER BY mr.created_at DESC
     `;
     const [rows] = await db.query(query, [staff_id]);
