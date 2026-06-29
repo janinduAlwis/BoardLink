@@ -15,12 +15,14 @@ const roomRoutes = require('./routes/roomRoutes');
 const tenantRoutes = require('./routes/tenantRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const utilityRoutes = require('./routes/utilityRoutes');
+const staffRoutes = require('./routes/staffRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/tenants', tenantRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/utilities', utilityRoutes);
+app.use('/api/staff', staffRoutes);
 
 app.get('/', (req, res) => {
   res.send('Smart Boarding House Management System API is running...');
