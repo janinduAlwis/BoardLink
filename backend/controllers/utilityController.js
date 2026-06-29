@@ -96,4 +96,55 @@ const updateUtilityStatus = async (req, res) => {
   }
 };
 
-module.exports = { getAllUtilityBills, createUtilityBill, updateUtilityStatus };
+// Get all utility bills for the logged in tenant
+const getMyUtilityBills = async (req, res) => {
+  const user_id = req.user.user_id;
+  try {
+    const query = `
+      SELECT ub.utility_bill_id, ub.billing_month, 
+             ub.electricity_charge, ub.water_charge, ub.internet_charge, ub.other_charge, 
+             ub.total_amount, ub.due_date, ub.payment_date, ub.status
+      FROM utility_bills ub
+      JOIN tenants t ON ub.tenant_id = t.tenant_id
+      WHERE t.user_id = ?
+      ORDER BY ub.due_date DESC
+    `;
+    const [rows] = await db.query(query, [user_id]);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching my utility bills:', error);
+    res.status(500).json({ message: 'Server error.', error: error.message });
+  }
+};
+
+// Simulate paying utility bill (dummy pay now button)
+const payMyUtilityBill = async (req, res) => {
+  const user_id = req.user.user_id;
+  const { bill_id } = req.params;
+  
+  try {
+    // Verify bill belongs to tenant
+    const [billRows] = await db.query(
+      `SELECT ub.utility_bill_id FROM utility_bills ub
+       JOIN tenants t ON ub.tenant_id = t.tenant_id
+       WHERE ub.utility_bill_id = ? AND t.user_id = ?`,
+       [bill_id, user_id]
+    );
+
+    if (billRows.length === 0) {
+      return res.status(404).json({ message: 'Utility bill record not found or unauthorized.' });
+    }
+
+    await db.query(
+      'UPDATE utility_bills SET status = ?, payment_date = CURRENT_DATE WHERE utility_bill_id = ?',
+      ['paid', bill_id]
+    );
+
+    res.status(200).json({ message: 'Utility bill paid successfully.' });
+  } catch (error) {
+    console.error('Error paying utility bill:', error);
+    res.status(500).json({ message: 'Server error.', error: error.message });
+  }
+};
+
+module.exports = { getAllUtilityBills, createUtilityBill, updateUtilityStatus, getMyUtilityBills, payMyUtilityBill };
