@@ -16,6 +16,10 @@ const tenantRoutes = require('./routes/tenantRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const utilityRoutes = require('./routes/utilityRoutes');
 const staffRoutes = require('./routes/staffRoutes');
+const maintenanceRoutes = require('./routes/maintenanceRoutes');
+const visitorRoutes = require('./routes/visitorRoutes');
+const announcementRoutes = require('./routes/announcementRoutes');
+
 
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
@@ -23,6 +27,9 @@ app.use('/api/tenants', tenantRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/utilities', utilityRoutes);
 app.use('/api/staff', staffRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/visitors', visitorRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 app.get('/', (req, res) => {
   res.send('Smart Boarding House Management System API is running...');

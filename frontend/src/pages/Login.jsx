@@ -2,11 +2,11 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
   const { login } = useContext(AuthContext);
@@ -14,7 +14,6 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
@@ -25,6 +24,7 @@ const Login = () => {
       
       const { token, user } = response.data;
       login(token, user);
+      toast.success('Logged in successfully!');
       
       // Redirect based on role
       if (user.role_name === 'Admin') {
@@ -38,7 +38,7 @@ const Login = () => {
       }
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      toast.error(err.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -49,8 +49,6 @@ const Login = () => {
       <div className="card" style={{ width: '100%', maxWidth: '400px' }}>
         <div className="card-body p-5">
           <h2 className="text-center mb-4 fw-bold" style={{ color: 'var(--ios-blue)' }}>Sign In</h2>
-          
-          {error && <div className="alert alert-danger p-2 small">{error}</div>}
           
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
