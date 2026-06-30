@@ -9,7 +9,7 @@ const Register = () => {
     email: '',
     phone: '',
     password: '',
-    role_name: 'Tenant', // Default role
+    role_name: 'Tenant', 
     nic_number: '',
     emergency_contact: ''
   });
@@ -35,7 +35,7 @@ const Register = () => {
     try {
       const payload = { ...formData };
       
-      // Remove Tenant-specific fields if not registering as a Tenant
+      
       if (formData.role_name !== 'Tenant') {
         delete payload.nic_number;
         delete payload.emergency_contact;
@@ -131,7 +131,7 @@ const Register = () => {
               </select>
             </div>
 
-            {/* Render Tenant fields only if Role is Tenant */}
+            
             {formData.role_name === 'Tenant' && (
               <div className="p-3 rounded mb-3" style={{ backgroundColor: 'var(--ios-bg)' }}>
                 <h5 className="small fw-bold mb-2" style={{ color: 'var(--ios-text-muted)' }}>Tenant Details</h5>
